@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>grAIn App Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: left = big step caption for the presenter, right = an iPhone-sized frame running the clickable app.
+   "Play demo" drives a fake finger through the main flow; every control also works by hand. */
+:root{
+  --stage:#0f2a1f; --stage-ink:#eaf5ee; --stage-muted:#9cc2ad;
+  --app-bg:#f4f7f2; --card:#ffffff; --ink:#15231b; --muted:#66756c; --line:#e3e9e2;
+  --green:#1f8a4c; --green-soft:#e2f4e8; --leaf:#2fb465; --water:#2a7fd4; --water-soft:#e3effb;
+  --sun:#e8901a; --sun-soft:#fdf0dc; --red:#c8452f; --red-soft:#fbe7e2;
+  --font:"Plus Jakarta Sans","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--stage);color:var(--stage-ink);font:15px/1.4 var(--font);display:flex;align-items:center;justify-content:center;gap:56px;flex-wrap:wrap;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px;overflow-x:hidden}
+.side{width:380px;max-width:100%;display:grid;gap:18px}
+.brand{font-weight:800;font-size:44px;letter-spacing:-.02em}
+.brand i{font-style:normal;color:var(--leaf)}
+.step-n{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--stage-muted)}
+.step-t{font-size:30px;font-weight:700;line-height:1.15;min-height:70px;text-wrap:balance}
+.step-d{color:var(--stage-muted);font-size:17px;min-height:48px}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap}
+.ctrl button{font:600 15px var(--font);padding:10px 18px;border-radius:999px;border:1px solid #3b6b52;background:transparent;color:var(--stage-ink);cursor:pointer}
+.ctrl button.primary{background:var(--leaf);border-color:var(--leaf);color:#06210f}
+.note{font-size:12px;color:var(--stage-muted)}
+/* phone */
+.phone{width:390px;height:800px;max-width:100%;border-radius:54px;background:#0b0f0d;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.45);position:relative;flex:none}
+.screen{position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden;background:var(--app-bg);color:var(--ink)}
+.notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:118px;height:32px;background:#0b0f0d;border-radius:20px;z-index:30}
+.status{height:50px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 30px 4px;font-weight:700;font-size:14px}
+.view{position:absolute;inset:50px 0 84px;overflow:hidden}
+.page{position:absolute;inset:0;padding:6px 18px 18px;overflow-y:auto;opacity:0;transform:translateX(24px);transition:opacity .35s,transform .35s;pointer-events:none;scrollbar-width:none}
+.page.on{opacity:1;transform:none;pointer-events:auto}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:84px;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-top:10px}
+.tab{background:none;border:0;font:600 11px var(--font);color:var(--muted);display:grid;justify-items:center;gap:3px;cursor:pointer;width:72px}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--green)}
+h2{font-size:24px;font-weight:800;letter-spacing:-.01em;margin:6px 0 2px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border-radius:20px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(20,40,30,.06)}
+.hero{background:linear-gradient(140deg,#1f8a4c,#2fb465);color:#fff}
+.hero .lbl{font-size:12px;font-weight:600;opacity:.85;text-transform:uppercase;letter-spacing:.08em}
+.hero .big{font-size:22px;font-weight:800;margin:4px 0 2px}
+.hero .why{margin-top:10px;background:rgba(255,255,255,.18);border:0;color:#fff;font:700 13px var(--font);padding:8px 12px;border-radius:999px;cursor:pointer}
+.row{display:flex;align-items:center;gap:12px}
+.metric{flex:1;background:var(--card);border-radius:18px;padding:12px}
+.metric .v{font-size:22px;font-weight:800}
+.metric .k{font-size:12px;color:var(--muted)}
+.zone{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.zone:first-of-type{border-top:0}
+.dot{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--green-soft)}
+.zone b{display:block;font-size:14px}.zone small{color:var(--muted);font-size:12px}
+.pill{margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px}
+.p-skip{background:var(--water-soft);color:var(--water)}.p-ok{background:var(--green-soft);color:var(--green)}.p-warn{background:var(--red-soft);color:var(--red)}
+.day{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.day .d{font-weight:800;font-size:13px}.day .w{font-size:12px;color:var(--muted)}
+.day .why2{font-size:13px}
+.hl{background:var(--sun-soft);border-radius:12px;margin:0 -8px;padding:10px 8px}
+.cam{position:relative;height:420px;border-radius:24px;overflow:hidden;background:#1d3a28}
+.cam img.plant{position:absolute;width:1300px;height:870px;left:-920px;top:-390px}
+.frame{position:absolute;inset:60px 50px 90px;border:3px solid rgba(255,255,255,.85);border-radius:22px}
+.scanline{position:absolute;left:50px;right:50px;height:3px;background:#7dffb0;box-shadow:0 0 18px #7dffb0;top:60px;opacity:0}
+.cam.scanning .scanline{opacity:1;animation:scan 1.1s ease-in-out infinite alternate}
+@keyframes scan{to{top:calc(100% - 93px)}}
+.camtxt{position:absolute;top:14px;left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:13px}
+.shutter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:66px;height:66px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.3);cursor:pointer}
+.result{display:none}
+.result.on{display:block;animation:up .45s ease}
+@keyframes up{from{opacity:0;transform:translateY(16px)}}
+.diag{display:flex;gap:12px;align-items:center}
+.diag .ic{width:48px;height:48px;border-radius:14px;background:var(--red-soft);display:flex;align-items:center;justify-content:center;font-size:24px}
+.conf{height:8px;background:var(--line);border-radius:8px;overflow:hidden;margin:8px 0 4px}
+.conf i{display:block;height:100%;width:0;background:var(--red);border-radius:8px;transition:width 1s}
+ol.todo{padding-left:20px;font-size:14px;display:grid;gap:6px}
+.btn{width:100%;border:0;border-radius:16px;padding:14px;font:800 15px var(--font);background:var(--green);color:#fff;cursor:pointer;margin-top:4px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:140px;padding-top:10px}
+.bars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.bars span{width:100%;max-height:calc(100% - 18px);border-radius:8px 8px 4px 4px;background:var(--water);transition:height .8s}
+.bars small{font-size:11px;color:var(--muted)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:28px 28px 0 0;padding:20px 20px 30px;box-shadow:0 -10px 40px rgba(0,0,0,.18);transform:translateY(110%);transition:transform .4s ease;z-index:20}
+.sheet.on{transform:none}
+.sheet h3{font-size:18px;margin-bottom:10px}
+.sheet .why-row{display:flex;gap:10px;align-items:center;padding:8px 0;font-size:14px}
+.sheet .why-row b{margin-left:auto}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19}
+.dim.on{opacity:1;pointer-events:auto}
+.toast{position:absolute;top:60px;left:16px;right:16px;background:#15231b;color:#fff;border-radius:16px;padding:12px 14px;font-size:13px;font-weight:600;transform:translateY(-220px);transition:transform .4s;z-index:25}
+.toast.on{transform:none}
+.end{position:absolute;inset:0;background:linear-gradient(160deg,#1f8a4c,#0f2a1f);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;pointer-events:none;transition:opacity .5s;z-index:40}
+.end.on{opacity:1}
+.end b{font-size:46px;font-weight:800}.end span{font-size:18px;opacity:.9}
+.finger{position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(0,0,0,.25);box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:50;pointer-events:none;opacity:0;transition:left .5s cubic-bezier(.4,.1,.2,1),top .5s cubic-bezier(.4,.1,.2,1),opacity .3s,transform .15s;transform:translate(-50%,-50%)}
+.finger.on{opacity:1}.finger.tap{transform:translate(-50%,-50%) scale(.75)}
+.demo-tag{position:absolute;top:56px;right:14px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.06em;z-index:5}
+body.embed{background:transparent;padding:0;gap:0;height:100vh;overflow:hidden}
+body.embed .side{display:none}
+body.embed{display:block}
+body.embed .phone{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--k,1));transform-origin:center;box-shadow:0 24px 50px rgba(0,0,0,.45)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<section class="side" aria-live="polite">
+  <div class="brand">gr<i>AI</i>n</div>
+  <div class="step-n" id="sn">App prototype</div>
+  <div class="step-t" id="st">Your garden, on autopilot.</div>
+  <div class="step-d" id="sd">Press "Play demo" for the guided tour, or tap around the phone yourself.</div>
+  <div class="ctrl"><button class="primary" id="play" type="button">Play demo</button><button id="reset" type="button">Reset</button></div>
+  <p class="note">Clickable prototype for the pitch · demo data, not a live product.</p>
+</section>
+
+<div class="phone" id="phone">
+ <div class="screen" id="screen">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>●●● 5G ▮</span></div>
+  <div class="demo-tag">PROTOTYPE</div>
+
+  <div class="view">
+   <!-- HOME -->
+   <div class="page on" id="p-home">
+    <div class="sub" style="margin:4px 0 0">Good morning, Laura</div>
+    <h2>Your garden</h2>
+    <div class="sub">Madrid · 24°C now · rain tomorrow</div>
+    <div class="card hero">
+      <div class="lbl">Next watering</div>
+      <div class="big">Skipped today</div>
+      <div style="font-size:14px;opacity:.92">Rain is coming tomorrow. Your soil is still moist.</div>
+      <button class="why" id="why" type="button">Why? →</button>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <div class="metric"><div class="v" style="color:var(--water)">120 L</div><div class="k">saved this week</div></div>
+      <div class="metric"><div class="v" style="color:var(--green)">62%</div><div class="k">soil moisture</div></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:4px">Zones</div>
+      <div class="zone"><div class="dot">🌿</div><div><b>Front lawn</b><small>Sensor · Gardena</small></div><span class="pill p-skip">Skipped</span></div>
+      <div class="zone"><div class="dot">🍅</div><div><b>Tomatoes</b><small>Sensor · grAIn kit</small></div><span class="pill p-warn" id="tomPill">Check leaves</span></div>
+      <div class="zone"><div class="dot">🪴</div><div><b>Terrace pots</b><small>No sensor · forecast only</small></div><span class="pill p-ok">7:00 · 4 L</span></div>
+    </div>
+   </div>
+
+   <!-- WATER PLAN -->
+   <div class="page" id="p-water">
+    <h2>Watering plan</h2>
+    <div class="sub">The AI updates it every hour from the forecast and your sensors.</div>
+    <div class="card">
+      <div class="day"><span class="d">Today</span><span class="why2">🌧 Rain tomorrow · <span class="w">soil 62%</span></span><span class="pill p-skip">Skip</span></div>
+      <div class="day"><span class="d">Sat</span><span class="why2">🌦 9 mm of rain <span class="w">· no watering</span></span><span class="pill p-skip">Skip</span></div>
+      <div class="day"><span class="d">Sun</span><span class="why2">⛅ 26°C <span class="w">· normal</span></span><span class="pill p-ok">18 L</span></div>
+      <div class="day hl" id="heat"><span class="d">Mon</span><span class="why2">☀️ Heatwave 38°C <span class="w">· water early, +30%</span></span><span class="pill" style="background:var(--sun);color:#fff">31 L</span></div>
+      <div class="day"><span class="d">Tue</span><span class="why2">☀️ 35°C <span class="w">· +20%</span></span><span class="pill p-ok">26 L</span></div>
+    </div>
+    <div class="card" style="font-size:14px"><b>A fixed timer</b> would use 195 L over these 5 days, rain or shine. <b style="color:var(--green)">grAIn: 75 L → 120 L saved.</b></div>
+   </div>
+
+   <!-- PLANT DOCTOR -->
+   <div class="page" id="p-doctor">
+    <h2>Plant doctor</h2>
+    <div class="sub">Take a photo. grAIn tells you what's wrong.</div>
+    <div class="cam" id="cam">
+      <img class="plant" src="plant.jpg" alt="">
+      <div class="frame"></div><div class="scanline"></div>
+      <div class="camtxt" id="camtxt">Point at the leaf</div>
+      <button class="shutter" id="shutter" type="button" aria-label="Take photo"></button>
+    </div>
+    <div class="result" id="result">
+      <div class="card" style="margin-top:12px">
+        <div class="diag"><div class="ic">🍂</div><div><div style="font-size:12px;color:var(--muted);font-weight:700">TOMATO PLANT</div><div style="font-size:19px;font-weight:800">Early blight (fungus)</div></div></div>
+        <div class="conf"><i id="confbar"></i></div>
+        <div style="font-size:12px;color:var(--muted)">87% match · brown spots with rings on lower leaves</div>
+      </div>
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px">What to do</div>
+        <ol class="todo"><li>Remove the spotted leaves.</li><li>Water at the base, in the morning.</li><li>Use a copper-based fungicide.</li></ol>
+      </div>
+      <button class="btn" id="apply" type="button">Adjust watering for Tomatoes</button>
+    </div>
+   </div>
+
+   <!-- STATS -->
+   <div class="page" id="p-stats">
+    <h2>Your savings</h2>
+    <div class="sub">This month, compared with a normal timer.</div>
+    <div class="row" style="margin-bottom:12px">
+      <div class="metric"><div class="v" style="color:var(--water)">1,240 L</div><div class="k">water saved</div></div>
+      <div class="metric"><div class="v" style="color:var(--green)">−38%</div><div class="k">vs fixed timer</div></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:800">Litres used per week</div>
+      <div class="bars" id="bars"><div><span data-h="100" style="height:4px"></span><small>Timer</small></div><div><span data-h="72" style="height:4px;background:var(--leaf)"></span><small>W1</small></div><div><span data-h="58" style="height:4px;background:var(--leaf)"></span><small>W2</small></div><div><span data-h="61" style="height:4px;background:var(--leaf)"></span><small>W3</small></div><div><span data-h="55" style="height:4px;background:var(--leaf)"></span><small>W4</small></div></div>
+    </div>
+    <div class="card" style="font-size:14px">🌱 <b>3 plants</b> diagnosed · <b>2 rain skips</b> this week · <b>Premium</b> €2.99/month</div>
+   </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab on" data-p="home" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button class="tab" data-p="water" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg>Water</button>
+    <button class="tab" data-p="doctor" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="M8 6l2-3h4l2 3"/></svg>Doctor</button>
+    <button class="tab" data-p="stats" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Savings</button>
+  </nav>
+
+  <div class="dim" id="dim"></div>
+  <div class="sheet" id="sheet">
+    <h3>Why grAIn skipped watering</h3>
+    <div class="why-row">🌧 Rain tomorrow<b>80% · 9 mm</b></div>
+    <div class="why-row">💧 Soil moisture (sensor)<b>62%</b></div>
+    <div class="why-row">🌡 Evaporation today<b>low</b></div>
+    <div class="why-row" style="color:var(--water)">🚰 Water saved<b>120 L</b></div>
+    <button class="btn" id="gotit" type="button">Got it</button>
+  </div>
+  <div class="toast" id="toast">✓ Tomatoes: watering moved to the morning, −15%</div>
+  <div class="end" id="end"><b>grAIn</b><span>Water smarter. Grow better.</span></div>
+  <div class="finger" id="finger"></div>
+ </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function show(p){$$('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));$$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.p===p));
+  if(p==='stats')setTimeout(()=>$$('#bars span').forEach(s=>s.style.height=s.dataset.h+'%'),150);}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.p)));
+function sheet(on){$('#sheet').classList.toggle('on',on);$('#dim').classList.toggle('on',on)}
+$('#why').addEventListener('click',()=>sheet(true));$('#gotit').addEventListener('click',()=>sheet(false));$('#dim').addEventListener('click',()=>sheet(false));
+let scanned=false;
+$('#shutter').addEventListener('click',()=>{if(scanned)return;scanned=true;const c=$('#cam');c.classList.add('scanning');$('#camtxt').textContent='Analysing…';
+  setTimeout(()=>{c.classList.remove('scanning');$('#camtxt').textContent='Done';$('#result').classList.add('on');setTimeout(()=>$('#confbar').style.width='87%',100);},1600)});
+$('#apply').addEventListener('click',()=>{const t=$('#toast');t.classList.add('on');$('#tomPill').className='pill p-ok';$('#tomPill').textContent='Adjusted';setTimeout(()=>t.classList.remove('on'),2600)});
+function reset(){show('home');sheet(false);scanned=false;$('#cam').classList.remove('scanning');$('#camtxt').textContent='Point at the leaf';$('#result').classList.remove('on');$('#confbar').style.width='0';
+  $('#tomPill').className='pill p-warn';$('#tomPill').textContent='Check leaves';$('#end').classList.remove('on');$$('#bars span').forEach(s=>s.style.height='4px');$('#p-doctor').scrollTop=0;
+  cap('App prototype','Your garden, on autopilot.','Press "Play demo" for the guided tour, or tap around the phone yourself.');}
+$('#reset').addEventListener('click',()=>{stop=true;reset()});
+function cap(n,t,d){$('#sn').textContent=n;$('#st').textContent=t;$('#sd').textContent=d}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));let stop=false;
+const F=$('#finger');
+async function tap(sel){if(stop)throw 0;const el=$(sel),s=$('#screen').getBoundingClientRect(),r=el.getBoundingClientRect();
+  F.classList.add('on');F.style.left=(r.left-s.left+r.width/2)+'px';F.style.top=(r.top-s.top+r.height/2)+'px';await wait(576);
+  F.classList.add('tap');await wait(115);el.click();F.classList.remove('tap');await wait(180);}
+async function scrollTo(sel,y){const p=$(sel);const start=p.scrollTop,t0=performance.now();await new Promise(r=>{(function f(){const k=Math.min(1,(performance.now()-t0)/520);p.scrollTop=start+(y-start)*k;k<1?requestAnimationFrame(f):r()})()});}
+async function demo(){stop=false;reset();await wait(288);
+  try{
+  cap('1 · Home','Your garden, at a glance','Every zone, its sensor, and what grAIn will do next.');await wait(2304);
+  cap('2 · Smart watering','It skips watering before rain','Forecast + soil moisture → no watering today, 120 L saved.');await tap('#why');await wait(2736);await tap('#gotit');
+  cap('3 · Watering plan','It plans the whole week','Skips rainy days, waters more before a heatwave.');await tap('.tab[data-p=water]');await wait(3024);
+  cap('4 · Plant doctor','Snap a photo of a sick plant','The AI recognises the plant and the problem.');await tap('.tab[data-p=doctor]');await wait(1080);await tap('#shutter');await wait(2016);
+  cap('4 · Plant doctor','A diagnosis in seconds','Early blight on the tomatoes, and exactly what to do.');await scrollTo('#p-doctor',330);await wait(1728);await scrollTo('#p-doctor',520);await wait(576);
+  await tap('#apply');cap('5 · One app','Care advice changes the watering','Diagnosis and irrigation talk to each other: that is grAIn.');await wait(1872);
+  cap('6 · Savings','You see what you save','1,240 L this month, 38% less than a fixed timer.');await tap('.tab[data-p=stats]');await wait(3024);
+  F.classList.remove('on');$('#end').classList.add('on');cap('grAIn','Water smarter. Grow better.','€2.99/month · works with the sensors you already own.');
+  }catch(e){}}
+$('#play').addEventListener('click',demo);
+if(location.hash==='#autoplay')setTimeout(demo,600);
+if(location.hash==='#embed'){document.body.classList.add('embed');const fitp=()=>document.body.style.setProperty('--k',Math.min(innerHeight/820,innerWidth/400));addEventListener('resize',fitp);fitp();}
+addEventListener('message',e=>{if(e.data==='play')demo();if(e.data==='reset'){stop=true;reset();}});
+</script>
+
+</body></html>

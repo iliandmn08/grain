@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>grAIn plant scan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* First-person scene on a 1280x720 stage: you walk onto the balcony towards the tomato plant (real photo),
+   raise the phone (its camera shows the same scene), grAIn spots the plant and the sick leaves from afar,
+   zooms in on a leaf (real close-up photo), shoots, analyses and shows the diagnosis + treatment plan.
+   Plays on load when standalone, or on postMessage("play") when embedded in the deck. */
+:root{--green:#1f8a4c;--ink:#15231b;--muted:#66756c;--line:#e3e9e2;--red:#c8452f;--red-soft:#fbe7e2;--sun:#e8901a;--sun-soft:#fdf0dc;--ar:#7dffb0;--font:"Plus Jakarta Sans","Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#0b1510;overflow:hidden}
+.stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;overflow:hidden;font-family:var(--font);color:var(--ink);background:#0b1510}
+/* the world: same photo + same transform outside and inside the phone */
+.world{position:absolute;left:0;top:-120px;width:1280px;height:960px;transform-origin:0 0;transform:translate(0,0) scale(1)}
+.walking .world{transition:transform 4.2s cubic-bezier(.35,.1,.25,1)}
+.outside{position:absolute;inset:0;transition:filter .8s}
+.outside.dim{filter:blur(5px) brightness(.55)}
+.bob{position:absolute;inset:0}
+.walking .bob{animation:bob .9s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,4px)}50%{transform:translate(0,7px)}75%{transform:translate(3px,4px)}}
+.world img{width:100%;height:100%;display:block}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.45));pointer-events:none}
+.brand{position:absolute;left:44px;top:34px;color:#fff;font-size:22px;font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.brand i{font-style:normal;color:var(--ar)}
+.cap{position:absolute;left:44px;bottom:70px;max-width:430px;color:#fff;font-size:30px;font-weight:800;line-height:1.2;text-shadow:0 2px 16px rgba(0,0,0,.6);transition:opacity .35s}
+.cap small{display:block;font-size:17px;font-weight:600;opacity:.85;margin-top:6px}
+.credit{position:absolute;left:44px;bottom:16px;color:rgba(255,255,255,.6);font-size:11px}
+.proto{position:absolute;right:22px;bottom:16px;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;letter-spacing:.04em}
+/* phone */
+.rig{position:absolute;left:500px;top:96px;width:300px;height:640px;transform:translateY(700px);transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.rig.in{transform:none}
+.hold{width:100%;height:100%}
+.rig.shaky .hold{animation:shake 2.4s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(1.5px,-1px) rotate(.2deg)}60%{transform:translate(-1px,1.5px) rotate(-.2deg)}}
+.phone{position:absolute;inset:0;border-radius:46px;background:#0b0f0d;padding:10px;box-shadow:0 40px 90px rgba(0,0,0,.65),inset 0 0 0 2px #2a2f2c}
+.screen{position:relative;width:100%;height:100%;border-radius:37px;overflow:hidden;background:#000}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:92px;height:26px;background:#0b0f0d;border-radius:14px;z-index:9}
+.feed{position:absolute;inset:0;transform-origin:140px 300px;transition:transform 1.4s cubic-bezier(.45,.05,.3,1)}
+.feed .world{left:-510px;top:-226px}
+.close{position:absolute;inset:0;opacity:0;transition:opacity .7s}
+.close.on{opacity:1}
+.close img{position:absolute;left:-1980px;top:-852px;width:2539px;height:1700px;filter:blur(10px);transition:filter .6s}
+.close.sharp img{filter:none}
+.ui{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .4s}
+.ui.on{opacity:1}
+.top{position:absolute;top:44px;left:0;right:0;text-align:center;color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.mode{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:var(--ar);font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.06em}
+.zoom{position:absolute;bottom:108px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:#fff;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px}
+.shutter{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.3);transition:transform .15s}
+.shutter.press{transform:translateX(-50%) scale(.8)}
+/* AR detection */
+.box{position:absolute;left:22px;top:118px;width:236px;height:330px;border:2px solid var(--ar);border-radius:14px;opacity:0;transform:scale(1.08);transition:opacity .35s,transform .45s}
+.box.on{opacity:1;transform:none}
+.box b{position:absolute;left:-2px;top:-26px;background:var(--ar);color:#0b1510;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px 8px 8px 0;white-space:nowrap}
+.pin{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(255,80,60,.9);box-shadow:0 0 0 0 rgba(255,80,60,.6);opacity:0;transform:scale(0);transition:opacity .3s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.pin.on{opacity:1;transform:none;animation:pulse 1.2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,80,60,.6)}100%{box-shadow:0 0 0 18px rgba(255,80,60,0)}}
+.ptag{position:absolute;left:50%;transform:translateX(-50%);top:-28px;background:rgba(0,0,0,.65);color:#fff;font-size:10.5px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap}
+.focus{position:absolute;left:86px;top:236px;width:108px;height:108px;border:2px solid #ffd54a;border-radius:10px;opacity:0;transform:scale(1.4);transition:opacity .25s,transform .35s,border-color .3s}
+.focus.on{opacity:1;transform:scale(1)}
+.focus.lock{border-color:var(--ar);box-shadow:0 0 0 3px rgba(125,255,176,.25)}
+.line{position:absolute;left:0;right:0;top:0;height:2px;background:var(--ar);box-shadow:0 0 12px var(--ar);opacity:0}
+.focus.scan .line{opacity:1;animation:sw .5s ease-in-out infinite alternate}
+@keyframes sw{to{top:calc(100% - 2px)}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:8;pointer-events:none}
+.flash.on{animation:fl .45s ease}
+@keyframes fl{15%{opacity:.95}100%{opacity:0}}
+.load{position:absolute;inset:0;background:rgba(8,20,14,.72);backdrop-filter:blur(8px);z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;opacity:0;transition:opacity .35s}
+.load.on{opacity:1}
+.ring{width:80px;height:80px;border-radius:50%;border:7px solid rgba(255,255,255,.18);border-top-color:var(--ar);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ls{display:grid;gap:8px;font-size:14px;font-weight:600;width:230px}
+.ls div{opacity:.35;transition:opacity .25s}.ls div.ok{opacity:1}.ls div.ok::before{content:"✓ ";color:var(--ar)}
+.res{position:absolute;inset:0;background:#f4f7f2;z-index:6;padding:44px 14px 14px;transform:translateY(100%);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.res.on{transform:none}
+.thumb{height:100px;border-radius:16px;overflow:hidden;position:relative;margin-bottom:10px}
+.thumb img{position:absolute;left:-622px;top:-355px;width:896px;height:600px}
+.thumb b{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;padding:3px 8px;border-radius:999px}
+.card{background:#fff;border-radius:16px;padding:11px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(20,40,30,.06)}
+.k{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--muted)}
+.dz{font-size:20px;font-weight:800;line-height:1.15;margin:2px 0}
+.sci{font-size:11.5px;color:var(--muted);font-style:italic}
+.bar{height:7px;background:var(--line);border-radius:7px;margin:8px 0 3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--red);border-radius:7px;transition:width 1s .2s}
+.res.on .bar i{width:87%}
+.tags{display:flex;gap:6px;margin-top:6px}
+.tag{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px}
+.t1{background:var(--red-soft);color:var(--red)}.t2{background:var(--sun-soft);color:var(--sun)}
+.plan .row{display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:start;padding:7px 0;border-top:1px solid var(--line);opacity:0;transform:translateX(14px);transition:all .4s}
+.plan .row:first-of-type{border-top:0}
+.plan .row.on{opacity:1;transform:none}
+.ic{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.plan b{display:block;font-size:13px}
+.plan small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.freq{display:inline-block;margin-top:3px;font-size:11px;font-weight:800;color:var(--green);background:#e2f4e8;padding:2px 7px;border-radius:999px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style></head><body>
+<div class="stage" id="stage">
+ <div class="outside" id="outside"><div class="bob"><div class="world" id="w1"><img src="balcony.jpg" alt=""></div></div><div class="vignette"></div></div>
+ <div class="brand">gr<i>AI</i>n · Plant doctor</div>
+ <div class="cap" id="cap"></div>
+ <div class="rig" id="rig"><div class="hold"><div class="phone"><div class="screen">
+   <div class="notch"></div>
+   <div class="feed" id="feed"><div class="bob"><div class="world" id="w2"><img src="balcony.jpg" alt=""></div></div></div>
+   <div class="close" id="close"><img src="plant.jpg" alt=""></div>
+   <div class="ui" id="ui">
+     <div class="top" id="hint">Scanning your balcony…</div>
+     <div class="mode">PLANT DOCTOR</div>
+     <div class="box" id="box"><b id="boxlbl">Tomato plant · 94%</b></div>
+     <div class="pin" id="p1" style="left:92px;top:262px"></div>
+     <div class="pin" id="p2" style="left:196px;top:368px"><span class="ptag">spots</span></div>
+     <div class="focus" id="focus"><div class="line"></div></div>
+     <div class="zoom" id="zoom">1×</div>
+     <div class="shutter" id="shutter"></div>
+   </div>
+   <div class="flash" id="flash"></div>
+   <div class="load" id="load"><div class="ring"></div><div style="font-weight:800;font-size:17px">Analysing…</div>
+     <div class="ls"><div id="l1">Plant identified: tomato</div><div id="l2">Brown spots with rings found</div><div id="l3">Compared with 12,000 cases</div></div></div>
+   <div class="res" id="res">
+     <div class="thumb"><img src="plant.jpg" alt=""><b>Your photo</b></div>
+     <div class="card">
+       <div class="k">DIAGNOSIS · TOMATO</div>
+       <div class="dz">Early blight</div>
+       <div class="sci">Fungus · Alternaria solani</div>
+       <div class="bar"><i></i></div>
+       <div style="font-size:11px;color:var(--muted)">87% match</div>
+       <div class="tags"><span class="tag t1">Moderate</span><span class="tag t2">Spreads in humid heat</span></div>
+     </div>
+     <div class="card plan">
+       <div class="k" style="margin-bottom:4px">TREATMENT PLAN</div>
+       <div class="row" id="r1"><div class="ic" style="background:#fbe7e2">✂️</div><div><b>Remove the spotted leaves</b><small>Bin them, don't compost.</small><span class="freq">Today · once</span></div></div>
+       <div class="row" id="r2"><div class="ic" style="background:#e2f4e8">🧪</div><div><b>Copper fungicide spray</b><small>About 20 ml per litre, both sides of the leaves.</small><span class="freq">1× every 7 days · 3 weeks · morning</span></div></div>
+       <div class="row" id="r3"><div class="ic" style="background:#e3effb">💧</div><div><b>Water at the base only</b><small>grAIn moved this zone to 7:00, −15%.</small><span class="freq">1× per day · 7:00</span></div></div>
+     </div>
+   </div>
+ </div></div></div></div>
+ <div class="credit">Photos: Tangopaso (public domain) · Dwight Sipler, CC BY 2.0 · via Wikimedia Commons</div>
+ <div class="proto">Prototype · demo data</div>
+</div>
+<script>
+const $=s=>document.getElementById(s),stage=$('stage');
+function fit(){const k=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform=`translate(-50%,-50%) scale(${k})`}
+addEventListener('resize',fit);fit();
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const worlds=[$('w1'),$('w2')];
+// walk: the tomato plant (≈ 30% across, 45% down the photo) ends up in the middle of the phone screen
+const WALK='translate(74px,-128px) scale(1.5)';
+function setWorld(t){worlds.forEach(w=>w.style.transform=t)}
+let run=0;
+function cap(t,s){$('cap').innerHTML=t+(s?`<small>${s}</small>`:'')}
+function reset(){run++;stage.classList.remove('walking');setWorld('translate(0,0) scale(1)');
+  $('rig').className='rig';$('outside').classList.remove('dim');$('feed').style.transform='';$('close').className='close';$('ui').classList.remove('on');
+  ['box','p1','p2'].forEach(i=>$(i).classList.remove('on'));$('focus').className='focus';$('load').classList.remove('on');$('res').classList.remove('on');$('flash').classList.remove('on');
+  ['l1','l2','l3'].forEach(i=>$(i).classList.remove('ok'));['r1','r2','r3'].forEach(i=>$(i).classList.remove('on'));
+  $('hint').textContent='Scanning your balcony…';$('zoom').textContent='1×';cap('Saturday morning, on your balcony.','Your tomato plant doesn\'t look great…');}
+async function play(){reset();const me=run;const W=async ms=>{await wait(ms);if(me!==run)throw 0};
+ try{
+  await W(200);stage.classList.add('walking');setWorld(WALK);await W(1800);
+  cap('Raise your phone.','grAIn looks at the whole plant, from where you stand.');
+  $('rig').classList.add('in','shaky');await W(700);$('outside').classList.add('dim');$('ui').classList.add('on');await W(1500);
+  stage.classList.remove('walking');$('box').classList.add('on');$('hint').textContent='Plant found';await W(800);
+  $('p1').classList.add('on');await W(350);$('p2').classList.add('on');$('boxlbl').textContent='Tomato · 2 leaves with spots';
+  cap('It spots the sick leaves from afar.','Then zooms in on the worst one.');await W(1400);
+  $('hint').textContent='Zooming on the spot…';['box','p1'].forEach(i=>$(i).classList.remove('on'));
+  $('feed').style.transform='translate(-56px,-68px) scale(2.6)';$('zoom').textContent='3×';await W(1000);
+  $('p2').classList.remove('on');$('close').classList.add('on');await W(500);$('close').classList.add('sharp');await W(500);
+  $('focus').classList.add('on');await W(300);$('focus').classList.add('lock','scan');$('hint').textContent='Hold still…';await W(1000);
+  $('shutter').classList.add('press');$('flash').classList.add('on');$('rig').classList.remove('shaky');await W(160);$('shutter').classList.remove('press');$('focus').classList.remove('scan');
+  cap('The AI analyses the photo…');$('load').classList.add('on');
+  for(const s of ['l1','l2','l3']){await W(500);$(s).classList.add('ok')}
+  await W(400);$('flash').classList.remove('on');$('res').classList.add('on');$('load').classList.remove('on');
+  cap('Diagnosis: early blight.','And exactly what to do, and how often.');
+  for(const s of ['r1','r2','r3']){await W(650);$(s).classList.add('on')}
+  await W(500);document.dispatchEvent(new Event('scandone'));
+ }catch(e){}}
+addEventListener('message',e=>{if(e.data==='play')play();if(e.data==='reset')reset();});
+reset();
+if(window.top===window||location.hash==='#play')setTimeout(play,500);
+</script>
+</body></html>

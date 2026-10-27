@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>grAIn Pitch</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap">
+<style>
+/* Layout: a fixed 1280x720 stage scaled to the window. Slides stack absolutely; the active slide's children
+   enter in sequence (data-d = step). Two glows drift between slides (morph feel), the logo header stays put. */
+:root{--bg:#0b1812;--ink:#f1f5f2;--muted:#a7c4b5;--green:#4ade80;--green-d:#1f8a4c;--blue:#38bdf8;--yellow:#f5c451;--red:#f87171;
+  --card:rgba(255,255,255,.055);--line:rgba(255,255,255,.12);--font:"Plus Jakarta Sans","Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050c08;overflow:hidden}
+body{font-family:var(--font);color:var(--ink)}
+.stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;background:var(--bg);overflow:hidden;transform-origin:center}
+.glow{position:absolute;width:760px;height:760px;border-radius:50%;filter:blur(40px);opacity:.55;transition:transform 1.4s cubic-bezier(.6,.05,.2,1),opacity 1.2s;pointer-events:none}
+.g1{background:radial-gradient(circle,#1f8a4c 0%,transparent 65%)}
+.g2{background:radial-gradient(circle,#1d6fa5 0%,transparent 65%)}
+.grid{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:28px 28px;opacity:.5}
+.hdr{position:absolute;left:58px;top:38px;display:flex;align-items:center;gap:10px;z-index:5;transition:opacity .6s}
+.hdr img{width:34px;height:34px}
+.hdr b{font-size:21px;font-weight:800}
+.hdr b i,.brand i{font-style:normal;color:var(--green)}
+.num{position:absolute;right:46px;bottom:28px;font-size:13px;color:var(--muted);z-index:5;font-variant-numeric:tabular-nums}
+.bar{position:absolute;left:0;bottom:0;height:3px;background:var(--green);z-index:6;transition:width .6s}
+.slide{position:absolute;inset:0;padding:110px 58px 50px;opacity:0;visibility:hidden;transition:opacity .7s,visibility 0s .7s}
+.slide.on{opacity:1;visibility:visible;transition:opacity .7s}
+.slide.out-l{transform:translateX(-30px);transition:opacity .5s,transform .5s,visibility 0s .5s}
+.slide [data-d]{opacity:0;transform:translateY(22px);filter:blur(4px);transition:opacity .7s,transform .7s cubic-bezier(.2,.8,.2,1),filter .7s}
+.slide.on [data-d]{opacity:1;transform:none;filter:none}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:.22em;color:var(--green);text-transform:uppercase}
+h1{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.08;margin:10px 0 8px;text-wrap:balance}
+.sub{font-size:19px;color:var(--muted);font-style:italic;font-weight:500}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px 30px}
+.ico{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.cols{display:grid;gap:18px}
+.k{font-size:17px;color:var(--muted);line-height:1.5}
+.big{font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.foot{position:absolute;left:58px;right:58px;bottom:34px;font-size:13px;color:var(--muted)}
+.proto-tag{display:inline-block;font-size:12px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+/* 1 title */
+.title-wrap{height:100%;display:flex;flex-direction:column;justify-content:center}
+.brand{font-size:120px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.tag{font-size:34px;font-weight:700;margin-top:10px}
+.team{display:flex;gap:16px;margin-top:40px}
+.person{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 18px}
+.av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1812}
+/* 2 hook */
+.hook{height:100%;display:flex;flex-direction:column;justify-content:center;gap:0}
+.hook .w{font-size:110px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.hook .w.hot{color:var(--yellow)}
+.hook .line2{font-size:32px;font-weight:600;color:var(--muted);margin-top:26px}
+.hook .line2 b{color:var(--ink)}
+/* lists */
+.feat{display:flex;gap:20px;align-items:center;min-height:160px}
+.feat h3{font-size:23px;font-weight:800;margin-bottom:8px}
+/* market circles */
+.tam{position:relative;width:400px;height:400px}
+.tam div{position:absolute;border-radius:50%;display:flex;justify-content:center;font-weight:800;transform:scale(.2);opacity:0;transition:transform 1s cubic-bezier(.2,.9,.2,1.1),opacity .6s}
+.slide.on .tam div{transform:none;opacity:1}
+.tam .c1{inset:0;background:rgba(56,189,248,.12);border:2px solid rgba(56,189,248,.5);padding-top:26px;color:var(--blue)}
+.tam .c2{inset:70px;background:rgba(74,222,128,.14);border:2px solid rgba(74,222,128,.5);padding-top:26px;color:var(--green);transition-delay:.3s}
+.tam .c3{inset:140px;background:var(--yellow);color:#0b1812;align-items:center;transition-delay:.6s;font-size:22px}
+.mrow{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:18px;padding:18px 22px}
+/* competition */
+table.cmp{width:100%;border-collapse:separate;border-spacing:0 10px;font-size:16px}
+.cmp th{font-size:14px;color:var(--muted);font-weight:700;padding:0 8px}
+.cmp td{background:var(--card);padding:13px 16px;text-align:center}
+.cmp td:first-child{text-align:left;border-radius:12px 0 0 12px;font-weight:700}
+.cmp td:last-child{border-radius:0 12px 12px 0}
+.cmp tr.me td{background:rgba(74,222,128,.14);border-top:2px solid var(--green);border-bottom:2px solid var(--green)}
+.cmp tr.me td:first-child{border-left:2px solid var(--green);font-size:20px}
+.cmp tr.me td:last-child{border-right:2px solid var(--green)}
+.y,.n{display:inline-block;font-size:22px;font-weight:800;transform:scale(0);transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.y{color:var(--green)}.n{color:var(--red)}
+.slide.on .y,.slide.on .n{transform:scale(1)}
+/* ERRC */
+.errc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:34px}
+.errc .card{padding:30px 34px;border-left:5px solid;min-height:190px}
+.errc h3{font-size:15px;letter-spacing:.18em;font-weight:800;margin-bottom:8px}
+.errc ul{list-style:none;font-size:21px;display:grid;gap:6px}
+/* pricing */
+.price{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:44px}
+.price .card{text-align:center;padding:34px 18px;position:relative;min-height:300px}
+.price .pp{font-size:50px;font-weight:800;margin:6px 0 0}
+.price .pop{border:2px solid var(--green);background:rgba(74,222,128,.1);transform:translateY(-8px)}
+.price .badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:#0b1812;font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;letter-spacing:.06em}
+.price ul{list-style:none;font-size:16px;color:var(--muted);margin-top:12px;display:grid;gap:4px}
+/* timeline */
+.tl{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px;padding-top:44px}
+.tl::before{content:"";position:absolute;left:0;top:14px;height:4px;width:0;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:4px;transition:width 1.6s .3s ease}
+.slide.on .tl::before{width:100%}
+.tl .dot{position:absolute;top:-38px;left:24px;width:20px;height:20px;border-radius:50%;background:var(--bg);border:4px solid var(--green)}
+.tl .card{position:relative}
+.tl .when{font-size:15px;font-weight:800;color:var(--green);letter-spacing:.06em}
+.tl h3{font-size:26px;font-weight:800;margin:4px 0 6px}
+/* roadmap */
+.ansoff{display:flex;gap:12px;align-items:center;margin-top:16px}
+.ansoff .card{flex:1;padding:16px 18px}
+.arrow{font-size:28px;color:var(--green)}
+/* financials */
+.chart{position:relative;height:330px;display:flex;align-items:flex-end;gap:46px;padding:0 20px;border-bottom:2px solid var(--line)}
+.yr{display:flex;align-items:flex-end;gap:10px;flex:1;position:relative;height:100%}
+.yr .b{flex:1;border-radius:8px 8px 0 0;height:0;transition:height 1.2s cubic-bezier(.2,.8,.2,1);position:relative}
+.yr .b span{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:800;white-space:nowrap}
+.yr .rev{background:var(--green)}.yr .cost{background:#f08a7a}
+.yr label{position:absolute;bottom:-28px;left:0;right:0;text-align:center;font-size:14px;color:var(--muted)}
+.kpi{display:grid;gap:12px}
+.kpi .card{display:flex;align-items:center;gap:16px;padding:16px 20px}
+.kpi .big{font-size:32px;min-width:130px}
+/* demo */
+.demo{display:grid;grid-template-columns:420px 1fr;gap:40px;align-items:center;height:100%;margin-top:-20px}
+.steps{display:grid;gap:12px;margin-top:22px}
+.steps div{display:flex;gap:12px;align-items:center;font-size:19px;font-weight:600;color:var(--muted)}
+.steps i{font-style:normal;width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--green)}
+.phonebox{height:640px;display:flex;justify-content:center}
+.phonebox iframe{width:380px;height:640px;border:0;background:transparent}
+.full{position:absolute;inset:0;padding:0}
+.full iframe{width:100%;height:100%;border:0}
+/* closing */
+.close{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.close img{width:150px;height:150px;margin-bottom:16px}
+.close .brand{font-size:44px}
+.close h1{font-size:70px;margin:12px 0 18px}
+.close .q{font-size:28px;color:var(--yellow);font-weight:600}
+.apx img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.pestel{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+.pestel .card{min-height:160px}.pestel i{font-style:normal;font-size:46px;font-weight:800;line-height:1;display:block}.pestel b{display:block;font-size:22px;margin:8px 0 6px}
+table.costs{width:100%;border-collapse:collapse;font-size:18px}.costs th{font-size:14px;color:var(--muted);text-align:right;padding:8px 12px}.costs th:first-child{text-align:left}
+.costs td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.costs td:first-child{text-align:left}
+.costs tr.tot td{font-weight:800;color:var(--yellow);border-bottom:0}
+.teamc{text-align:center;min-height:300px}.teamc .av{width:84px;height:84px;font-size:34px;margin:0 auto 14px}.teamc h3{font-size:28px}.teamc .role{font-weight:800;letter-spacing:.1em;margin:4px 0 12px}
+.photo-bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.14);transition:transform 10s cubic-bezier(.2,.6,.3,1)}
+.slide.on .photo-bg{transform:scale(1)}
+.shade{position:absolute;inset:0}
+.slide.photo>:not(.photo-bg):not(.shade){position:relative;z-index:1}
+.pcredit{position:absolute!important;left:58px;bottom:14px;font-size:11px;color:rgba(255,255,255,.55)}
+.hl{background:linear-gradient(transparent 60%,rgba(74,222,128,.38) 60%,rgba(74,222,128,.38) 92%,transparent 92%) no-repeat;background-size:0% 100%;transition:background-size .9s cubic-bezier(.2,.8,.2,1) 1s;padding:0 2px}
+.slide.on .hl{background-size:100% 100%}
+.pbar{height:8px;border-radius:8px;background:rgba(255,255,255,.08);margin-top:16px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:8px;transition:width 1.4s cubic-bezier(.2,.8,.2,1) .9s}
+.slide.on .pbar i{width:var(--w)}
+.collage{position:absolute;right:40px;top:96px;width:470px;height:540px;z-index:1}
+.collage figure{position:absolute;margin:0;border-radius:18px;overflow:hidden;border:6px solid #f1f5f2;box-shadow:0 24px 60px rgba(0,0,0,.5);opacity:0;transition:opacity .9s,transform 1.1s cubic-bezier(.2,.8,.2,1)}
+.collage img{width:100%;height:100%;object-fit:cover;display:block}
+.collage figcaption{position:absolute;left:10px;bottom:10px;background:rgba(6,14,10,.75);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+.collage .f1{left:150px;top:0;width:300px;height:220px;transform:translateY(40px) rotate(6deg)}
+.collage .f2{left:0;top:170px;width:300px;height:230px;transform:translateY(40px) rotate(-7deg)}
+.collage .f3{left:170px;top:330px;width:290px;height:200px;transform:translateY(40px) rotate(3deg)}
+.slide.on .collage figure{opacity:1}
+.slide.on .collage .f1{transform:rotate(4deg);transition-delay:.5s}.slide.on .collage .f2{transform:rotate(-5deg);transition-delay:.75s}.slide.on .collage .f3{transform:rotate(2deg);transition-delay:1s}
+.slide.on .collage{animation:float 7s ease-in-out 2s infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.solphone{display:flex;justify-content:center;align-items:center}
+.solphone img{height:430px;filter:drop-shadow(0 24px 50px rgba(0,0,0,.55))}
+/* notes overlay */
+.notes{position:fixed;left:16px;right:16px;bottom:16px;max-height:40vh;overflow:auto;background:rgba(5,12,8,.94);border:1px solid #2a4a38;border-radius:14px;padding:14px 18px;font:15px/1.5 var(--font);color:#e6efe9;z-index:50;display:none;white-space:pre-wrap}
+.notes.on{display:block}
+.help{position:fixed;right:14px;top:12px;font:12px var(--font);color:#5d7a6a;z-index:40}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:.01s!important}}
+</style></head><body>
+<div class="stage" id="stage">
+ <div class="glow g1" id="g1"></div><div class="glow g2" id="g2"></div><div class="grid"></div>
+ <div class="hdr" id="hdr"><img src="logo.png" alt=""><b>gr<i>AI</i>n</b></div>
+
+ <!-- 1 TITLE · ARYAN -->
+ <section class="slide" data-who="ARYAN" data-glow="900,-200,-300,350">
+  <div class="collage" aria-hidden="true">
+   <figure class="f1"><img src="balcony.jpg" alt=""><figcaption>Your balcony</figcaption></figure>
+   <figure class="f2"><img src="plant.jpg" alt=""><figcaption>Sick leaf? Scan it</figcaption></figure>
+   <figure class="f3"><img src="sprinkler.jpg" alt=""><figcaption>Water only when needed</figcaption></figure>
+  </div>
+  <div class="title-wrap">
+   <div class="eyebrow" data-d="1">Pitch deck · Introduction to Business Management · IE University</div>
+   <div class="brand" data-d="2" style="margin-top:16px">gr<i>AI</i>n</div>
+   <div class="tag" data-d="3">Your garden, on autopilot.</div>
+   <div class="k" data-d="4" style="font-size:19px;max-width:600px;margin-top:10px">An AI garden assistant that waters your plants exactly when they need it, and tells you how to take care of them.</div>
+   <div class="team" data-d="5">
+    <div class="person"><div class="av" style="background:var(--blue)">M</div><div><b>Matei</b><div class="k">CEO · CFO</div></div></div>
+    <div class="person"><div class="av" style="background:var(--yellow)">A</div><div><b>Aryan</b><div class="k">COO · CMO</div></div></div>
+    <div class="person"><div class="av" style="background:var(--green)">I</div><div><b>Ilian</b><div class="k">CTO · Product</div></div></div>
+   </div>
+  </div>
+ </section>
+ <!-- 2 HOOK -->
+ <section class="slide photo" data-who="ARYAN" data-glow="700,200,-200,-250" data-hot="1">
+  <div class="photo-bg" style="background-image:url(sprinkler.jpg);background-position:center"></div><div class="shade" style="background:linear-gradient(90deg,rgba(6,14,10,.92) 0%,rgba(6,14,10,.7) 45%,rgba(6,14,10,.25) 100%)"></div><div class="pcredit">Photo: Acabashi, CC BY-SA 4.0, via Wikimedia Commons</div>
+  <div class="hook">
+   <div class="w" data-d="1">August.</div>
+   <div class="w" data-d="3">Madrid.</div>
+   <div class="w hot" data-d="5"><span data-count="38" data-suffix="°C">0°C</span></div>
+   <div class="line2" data-d="8">You're away for the weekend. <b>Your garden isn't.</b></div>
+  </div>
+ </section>
+ <!-- 3 PROBLEM -->
+ <section class="slide" data-who="ARYAN" data-glow="-200,250,800,-150">
+  <div class="eyebrow" data-d="1">01 — The problem</div>
+  <h1 data-d="2">Gardeners water by <span class="hl">habit</span>, not by <span class="hl">data</span></h1>
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);margin-top:56px">
+   <div class="card" data-d="3" style="min-height:300px"><div class="ico" style="background:rgba(56,189,248,.18)">💧</div><h3 style="font-size:26px;margin:22px 0 10px">Wasted water</h3><div class="k">Timers run on a fixed schedule: same time, same amount, rain or heatwave.</div></div>
+   <div class="card" data-d="4" style="min-height:300px"><div class="ico" style="background:rgba(245,196,81,.18)">🌵</div><h3 style="font-size:26px;margin:22px 0 10px">Drought rules</h3><div class="k">In past droughts Catalonia limited garden watering to 2 days a week; Seville banned it with drinking water.</div></div>
+   <div class="card" data-d="5" style="min-height:300px"><div class="ico" style="background:rgba(248,113,113,.18)">🥀</div><h3 style="font-size:26px;margin:22px 0 10px">No expert advice</h3><div class="k">Which fertiliser? Why are the leaves yellow? People guess, google or ask a neighbour.</div></div>
+  </div>
+ </section>
+ <!-- 4 VALIDATION -->
+ <section class="slide" data-who="ARYAN" data-glow="850,300,-150,-200">
+  <div class="eyebrow" data-d="1">02 — Validation</div>
+  <h1 data-d="2">The problem is <span class="hl">real</span></h1>
+  <div class="sub" data-d="2">What existing studies show · our own survey in Spain comes next</div>
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);margin-top:34px">
+   <div class="card" data-d="3" style="padding:28px"><div class="big" style="font-size:72px;color:var(--blue)"><span data-count="50" data-suffix="%+">0</span></div><div class="pbar"><i style="--w:50%;background:var(--blue)"></i></div><div class="k" style="font-size:17px;color:var(--ink);margin-top:10px">of plant owners forget to water their plants</div><div class="k" style="margin-top:6px">Harveys survey, UK</div></div>
+   <div class="card" data-d="4" style="padding:28px"><div class="big" style="font-size:72px;color:var(--yellow)"><span data-count="42" data-suffix="%">0</span></div><div class="pbar"><i style="--w:42%;background:var(--yellow)"></i></div><div class="k" style="font-size:17px;color:var(--ink);margin-top:10px">don't know how to look after their plants</div><div class="k" style="margin-top:6px">Harveys survey, UK</div></div>
+   <div class="card" data-d="5" style="padding:28px"><div class="big" style="font-size:72px;color:var(--green)"><span data-count="50" data-suffix="%">0</span></div><div class="pbar"><i style="--w:50%;background:var(--green)"></i></div><div class="k" style="font-size:17px;color:var(--ink);margin-top:10px">of irrigation water can be wasted by overwatering</div><div class="k" style="margin-top:6px">US EPA WaterSense</div></div>
+  </div>
+  <div class="foot" data-d="6">Next step: our own survey of Spanish gardeners, then the pilot measures if people will pay.</div>
+ </section>
+ <!-- 6 SOLUTION · ILIAN -->
+ <section class="slide" data-who="ILIAN" data-glow="350,-250,-100,350">
+  <div class="eyebrow" data-d="1">03 — The solution</div>
+  <h1 data-d="2"><span class="hl">Two things</span> in one app</h1>
+  <div style="display:grid;grid-template-columns:1fr 250px 1fr;gap:28px;margin-top:28px;align-items:center">
+   <div class="cols" style="gap:24px">
+    <div class="card feat" data-d="3"><div class="ico" style="background:var(--blue)">🌦</div><div><h3>Reads weather + soil</h3><div class="k">Forecast and soil moisture, every hour.</div></div></div>
+    <div class="card feat" data-d="4"><div class="ico" style="background:var(--blue)">💧</div><div><h3>Smart watering</h3><div class="k">Skips before rain, waters more before a heatwave.</div></div></div>
+   </div>
+   <div class="solphone" data-d="3"><img src="phone-home.png" alt="The grAIn app home screen"></div>
+   <div class="cols" style="gap:24px">
+    <div class="card feat" data-d="5"><div class="ico" style="background:var(--green)">📷</div><div><h3>Photo diagnosis</h3><div class="k">Snap a plant: what it is and what's wrong.</div></div></div>
+    <div class="card feat" data-d="6"><div class="ico" style="background:var(--green)">🌱</div><div><h3>Care assistant</h3><div class="k">Tells you which product to use, and how often.</div></div></div>
+   </div>
+  </div>
+  <div class="foot" data-d="7" style="font-size:16px;color:var(--ink)">Works with the sensors people already own · <span style="color:var(--green)">€2.99 a month</span></div>
+ </section>
+ <!-- 7 LIVE DEMO (app) -->
+ <section class="slide photo" data-who="ILIAN" data-glow="-150,100,850,-100" data-play="app">
+  <div class="photo-bg" style="background-image:url(basil.jpg);background-position:60% 50%"></div><div class="shade" style="background:linear-gradient(90deg,rgba(6,14,10,.94) 0%,rgba(6,14,10,.8) 34%,rgba(6,14,10,.2) 70%,rgba(6,14,10,.35) 100%)"></div><div class="pcredit">Photo: Nicole Bratt, CC BY-SA 2.0, via Wikimedia Commons</div>
+  <div class="demo">
+   <div>
+    <div class="eyebrow" data-d="1">03 — Live demo</div>
+    <h1 data-d="2">See it <span class="hl">working</span></h1>
+    <div class="steps">
+     <div data-d="3"><i>1</i>Skips watering before rain</div>
+     <div data-d="4"><i>2</i>Plans the whole week</div>
+     <div data-d="5"><i>3</i>Plant doctor: scan a leaf</div>
+     <div data-d="6"><i>4</i>Shows what you save</div>
+    </div>
+    <div data-d="7" style="margin-top:26px"><span class="proto-tag">Clickable prototype · demo data</span></div>
+   </div>
+   <div class="phonebox" data-d="2"><iframe id="appframe" src="app.html#embed" title="grAIn app prototype"></iframe></div>
+  </div>
+ </section>
+ <!-- 8 PLANT SCAN -->
+ <section class="slide full" data-who="ILIAN" data-glow="0,0,0,0" data-play="scan" data-nohdr="1">
+  <iframe id="scanframe" src="scan.html#embed" title="Plant scan"></iframe>
+ </section>
+
+ <!-- WHY NOW · PESTEL -->
+ <section class="slide" data-who="MATEI" data-glow="-250,250,800,-200">
+  <div class="eyebrow" data-d="1">04 — Why now · PESTEL</div>
+  <h1 data-d="2">The environment is <span class="hl">pushing</span> for grAIn</h1>
+  <div class="pestel">
+   <div class="card" data-d="3"><i style="color:var(--blue)">P</i><b>Political</b><div class="k">Drought plans limit garden watering in dry years.</div></div>
+   <div class="card" data-d="4"><i style="color:var(--yellow)">E</i><b>Economic</b><div class="k">Every litre saved is money saved on the water bill.</div></div>
+   <div class="card" data-d="5"><i style="color:var(--green)">S</i><b>Social</b><div class="k">People care more about sustainability and growing plants at home.</div></div>
+   <div class="card" data-d="6"><i style="color:var(--blue)">T</i><b>Technological</b><div class="k">AI and sensors are now cheap to build on.</div></div>
+   <div class="card" data-d="7"><i style="color:var(--yellow)">E</i><b>Environmental</b><div class="k">Spain is one of Europe's countries most hit by drought.</div></div>
+   <div class="card" data-d="8"><i style="color:var(--green)">L</i><b>Legal</b><div class="k">Water-use rules, and GDPR for our users' data.</div></div>
+  </div>
+ </section>
+ <!-- 5 MARKET -->
+ <section class="slide" data-who="ARYAN" data-glow="-250,-200,750,300">
+  <div class="eyebrow" data-d="1">05 — Market size</div>
+  <h1 data-d="2">A <span class="hl">growing</span> market, starting in Spain</h1>
+  <div style="display:grid;grid-template-columns:400px 1fr;gap:40px;align-items:center;margin-top:14px">
+   <div class="tam"><div class="c1">TAM</div><div class="c2">SAM</div><div class="c3">SOM</div></div>
+   <div class="cols" style="gap:12px">
+    <div class="card mrow" data-d="3"><div class="big" style="font-size:44px;color:var(--blue)">$<span data-count="2.65" data-dec="2">0</span>B</div><div><b style="color:var(--blue)">TAM · global smart irrigation</b><div class="k">by 2030, from $1.59B in 2025 (~11% a year). Europe ≈ $550M.</div></div></div>
+    <div class="card mrow" data-d="4"><div class="big" style="font-size:44px;color:var(--green)"><span data-count="5.9" data-dec="1">0</span>M</div><div><b style="color:var(--green)">SAM · Spanish houses</b><div class="k">households in single-family houses (INE): the homes with gardens.</div></div></div>
+    <div class="card mrow" data-d="5"><div class="big" style="font-size:44px;color:var(--yellow)"><span data-count="60000" data-sep="1">0</span></div><div><b style="color:var(--yellow)">SOM · our 3-year goal</b><div class="k">users ≈ 1% of our SAM, 15% of them on Premium.</div></div></div>
+   </div>
+  </div>
+  <div class="foot" data-d="6">Sources: MarketsandMarkets, MarketDataForecast, INE · market structure: monopolistic competition</div>
+ </section>
+ <!-- 9 COMPETITION -->
+ <section class="slide" data-who="MATEI" data-glow="800,250,-300,-150">
+  <div class="eyebrow" data-d="1">06 — Competition</div>
+  <h1 data-d="2">Others do one thing. grAIn does <span class="hl">both</span>.</h1>
+  <div class="sub" data-d="2">Porter's generic strategy: differentiation focus</div>
+  <table class="cmp" style="margin-top:18px">
+   <tr data-d="3"><th></th><th>AI weather watering</th><th>Plant-care assistant</th><th>Works with sensors you own</th><th>Cheap subscription</th></tr>
+   <tr data-d="3"><td>Gardena · B-hyve · Rain Bird</td><td><span class="y" style="transition-delay:.6s">✓</span></td><td><span class="n" style="transition-delay:.7s">✕</span></td><td><span class="n" style="transition-delay:.8s">✕</span></td><td><span class="y" style="transition-delay:.9s">✓</span></td></tr>
+   <tr data-d="4"><td>Planta · Greg</td><td><span class="n" style="transition-delay:1s">✕</span></td><td><span class="y" style="transition-delay:1.1s">✓</span></td><td><span class="n" style="transition-delay:1.2s">✕</span></td><td><span class="y" style="transition-delay:1.3s">✓</span></td></tr>
+   <tr data-d="5"><td>Hemav (farms)</td><td><span class="y" style="transition-delay:1.4s">✓</span></td><td><span class="n" style="transition-delay:1.5s">✕</span></td><td><span class="n" style="transition-delay:1.6s">✕</span></td><td><span class="n" style="transition-delay:1.7s">✕</span></td></tr>
+   <tr class="me" data-d="7"><td>gr<span style="color:var(--green)">AI</span>n</td><td><span class="y" style="transition-delay:2.1s">✓</span></td><td><span class="y" style="transition-delay:2.2s">✓</span></td><td><span class="y" style="transition-delay:2.3s">✓</span></td><td><span class="y" style="transition-delay:2.4s">✓</span></td></tr>
+  </table>
+ </section>
+ <!-- 10 BLUE OCEAN -->
+ <section class="slide" data-who="ARYAN" data-glow="-300,300,700,-200">
+  <div class="eyebrow" data-d="1">07 — Blue Ocean strategy</div>
+  <h1 data-d="2"><span class="hl">Blue Ocean</span>: the ERRC grid</h1>
+  <div class="sub" data-d="2">We don't fight in the red ocean of irrigation brands: we create a new space</div>
+  <div class="errc">
+   <div class="card" data-d="3" style="border-left-color:var(--red)"><h3 style="color:var(--red)">ELIMINATE</h3><ul><li>Hardware lock-in (one brand only)</li><li>Complicated setup</li></ul></div>
+   <div class="card" data-d="4" style="border-left-color:var(--yellow)"><h3 style="color:var(--yellow)">REDUCE</h3><ul><li>Price: €2.99/month vs €90–260 controllers</li><li>Time spent watering</li></ul></div>
+   <div class="card" data-d="5" style="border-left-color:var(--blue)"><h3 style="color:var(--blue)">RAISE</h3><ul><li>Water savings</li><li>Personalised advice for each plant</li></ul></div>
+   <div class="card" data-d="6" style="border-left-color:var(--green)"><h3 style="color:var(--green)">CREATE</h3><ul><li>AI watering + plant doctor in one app</li><li>Works with any sensor you own</li></ul></div>
+  </div>
+ </section>
+ <!-- 13 PRODUCT & GROWTH -->
+ <section class="slide" data-who="MATEI" data-glow="750,-150,-150,300">
+  <div class="eyebrow" data-d="1">08 — Product & roadmap</div>
+  <h1 data-d="2">The app, plus an optional <span class="hl">Wi-Fi kit</span></h1>
+  <div class="cols" style="grid-template-columns:1fr 1fr;margin-top:20px">
+   <div class="card feat" data-d="3"><div class="ico" style="background:var(--green)">📱</div><div><h3>grAIn app</h3><div class="k">Connects by Bluetooth to the sensors and controllers people already own: AI watering plan + photo assistant.</div></div></div>
+   <div class="card feat" data-d="4"><div class="ico" style="background:var(--blue)">📡</div><div><h3>grAIn Wi-Fi kit · optional</h3><div class="k">Bluetooth only reaches ~10 m. The hub + soil sensor stay online, so the AI keeps watering while you're away.</div></div></div>
+  </div>
+  <div class="eyebrow" data-d="5" style="margin-top:30px;color:var(--muted)">Growth path · Ansoff matrix</div>
+  <div class="ansoff">
+   <div class="card" data-d="5"><b style="color:var(--green)">V1 · Home gardens</b><div class="k">Spain · market penetration</div></div><div class="arrow" data-d="6">→</div>
+   <div class="card" data-d="6"><b style="color:var(--blue)">V2 · Farms</b><div class="k">New segment + farm features</div></div><div class="arrow" data-d="7">→</div>
+   <div class="card" data-d="7"><b style="color:var(--yellow)">V3 · Southern Europe</b><div class="k">Market development: Portugal, Italy, France</div></div>
+  </div>
+ </section>
+ <!-- 11 BUSINESS MODEL · MATEI -->
+ <section class="slide" data-who="MATEI" data-glow="500,-250,-200,300">
+  <div class="eyebrow" data-d="1">09 — Business model</div>
+  <h1 data-d="2">Freemium: try it <span class="hl">free</span>, upgrade for the <span class="hl">AI</span></h1>
+  <div class="price">
+   <div class="card" data-d="3"><b>Free</b><div class="pp">€0</div><div class="k">forever</div><ul><li>Basic assistant</li><li>1 watering zone</li></ul></div>
+   <div class="card pop" data-d="4"><div class="badge">MOST POPULAR</div><b>Premium</b><div class="pp" style="color:var(--green)">€2.99</div><div class="k">per month · or €24.99/year</div><ul><li>AI weather watering</li><li>Several zones</li><li>Photo diagnosis</li></ul></div>
+   <div class="card" data-d="5"><b>Wi-Fi kit</b><div class="pp" style="color:var(--blue)">€59</div><div class="k">one-time purchase</div><ul><li>Hub + soil sensor</li><li>Works while you're away</li></ul></div>
+   <div class="card" data-d="6" style="opacity:.85"><b>Farm · V2</b><div class="pp" style="color:var(--yellow);font-size:34px;margin-top:12px">per ha</div><div class="k">for large estates</div><ul><li>Large-scale irrigation</li><li>Flood & drought alerts</li></ul></div>
+  </div>
+  <div class="foot" data-d="7" style="font-size:16px;color:var(--ink)">Avg. Premium user ≈ €25/year · lifetime value ≈ <b style="color:var(--green)">€60</b> · sold via app stores, garden centres, Amazon</div>
+ </section>
+ <!-- 12 GO-TO-MARKET -->
+ <section class="slide" data-who="MATEI" data-glow="-250,-150,850,250">
+  <div class="eyebrow" data-d="1">10 — Go-to-market · Lean Startup</div>
+  <h1 data-d="2">Build, measure, learn, then <span class="hl">scale</span></h1>
+  <div class="tl">
+   <div class="card" data-d="3"><div class="dot"></div><div class="when">SPRING 2027</div><h3>Pilot</h3><div class="k">MVP test: 200 gardens around Madrid get Premium free for feedback.</div></div>
+   <div class="card" data-d="5"><div class="dot" style="border-color:#3bc6b0"></div><div class="when">SUMMER 2027</div><h3>Launch</h3><div class="k">Garden centres, gardening creators on TikTok and Instagram, water-saving campaigns.</div></div>
+   <div class="card" data-d="7"><div class="dot" style="border-color:var(--blue)"></div><div class="when" style="color:var(--blue)">2028</div><h3>Scale</h3><div class="k">All of Spain, Amazon, and partnerships with irrigation installers.</div></div>
+  </div>
+  <div class="foot" data-d="8" style="font-size:16px;color:var(--ink)">Goal: <b style="color:var(--green)">10,000 users</b> and <b style="color:var(--green)">1,000 Premium</b> subscribers by the end of year 1</div>
+ </section>
+ <!-- 14 FINANCIALS -->
+ <section class="slide" data-who="MATEI" data-glow="-200,300,800,-200">
+  <div class="eyebrow" data-d="1">11 — Financials</div>
+  <h1 data-d="2"><span class="hl">3-year</span> projection, Spain only (our assumptions)</h1>
+  <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:40px;margin-top:40px;align-items:end">
+   <div data-d="3">
+    <div style="display:flex;gap:18px;font-size:14px;margin-bottom:34px"><span><i style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px"></i> Revenue</span><span><i style="display:inline-block;width:12px;height:12px;background:#f08a7a;border-radius:3px"></i> Costs</span></div>
+    <div class="chart">
+     <div class="yr"><div class="b rev" data-h="13"><span>€60k</span></div><div class="b cost" data-h="32.5"><span>€150k</span></div><label>Year 1</label></div>
+     <div class="yr"><div class="b rev" data-h="45"><span>€208k</span></div><div class="b cost" data-h="47.7"><span>€220k</span></div><label>Year 2</label></div>
+     <div class="yr"><div class="b rev" data-h="100"><span>€461k</span></div><div class="b cost" data-h="71.6"><span>€330k</span></div><label>Year 3</label></div>
+    </div>
+   </div>
+   <div class="kpi">
+    <div class="card" data-d="5"><div class="big" style="color:var(--green)">+€<span data-count="130">0</span>k</div><div class="k">profit in year 3</div></div>
+    <div class="card" data-d="6"><div class="big" style="color:var(--blue)">Year 3</div><div class="k">break-even point</div></div>
+    <div class="card" data-d="7"><div class="big" style="color:var(--yellow)">€<span data-count="150">0</span>k</div><div class="k">pre-seed needed · 50% product · 30% marketing · 20% kit stock</div></div>
+   </div>
+  </div>
+ </section>
+
+ <!-- COSTS & UNIT ECONOMICS -->
+ <section class="slide" data-who="MATEI" data-glow="800,-150,-250,300">
+  <div class="eyebrow" data-d="1">12 — Costs & unit economics</div>
+  <h1 data-d="2">What a customer is <span class="hl">worth</span></h1>
+  <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:36px;margin-top:26px;align-items:start">
+   <table class="costs" data-d="3">
+    <tr><th>€ thousands</th><th>Year 1</th><th>Year 2</th><th>Year 3</th></tr>
+    <tr><td>Team & development</td><td>80</td><td>80</td><td>100</td></tr>
+    <tr><td>Cloud & AI</td><td>10</td><td>20</td><td>35</td></tr>
+    <tr><td>Marketing</td><td>45</td><td>70</td><td>95</td></tr>
+    <tr><td>Kit production (€25/kit)</td><td>15</td><td>50</td><td>100</td></tr>
+    <tr class="tot"><td>Total costs</td><td>150</td><td>220</td><td>330</td></tr>
+   </table>
+   <div class="kpi">
+    <div class="card" data-d="4"><div class="big" style="font-size:24px;min-width:200px;color:var(--green)">LTV ≈ €<span data-count="60">0</span></div><div class="k">a Premium user pays ~€25/year and stays ~2.5 years</div></div>
+    <div class="card" data-d="5"><div class="big" style="font-size:24px;min-width:200px;color:var(--blue)">CAC €45 → €18</div><div class="k">marketing ÷ new Premium users, year 1 → year 3</div></div>
+    <div class="card" data-d="6"><div class="big" style="font-size:24px;min-width:200px;color:var(--yellow)">LTV/CAC 1.3 → 3.4</div><div class="k">above 3 by year 3: healthy unit economics</div></div>
+   </div>
+  </div>
+  <div class="foot" data-d="7">Kit: sold €59, costs €25 → €34 margin each · Exit potential: acquisition by a big garden group (e.g. Husqvarna, owner of Gardena)</div>
+ </section>
+
+ <!-- KEY RISKS -->
+ <section class="slide" data-who="ALL" data-glow="-200,-200,800,250">
+  <div class="eyebrow" data-d="1">13 — Key risks</div>
+  <h1 data-d="2">What could go wrong, and <span class="hl">our answer</span></h1>
+  <div class="cols" style="grid-template-columns:1fr 1fr;gap:20px;margin-top:30px">
+   <div class="card feat" data-d="3"><div class="ico" style="background:rgba(248,113,113,.18)">🔌</div><div><h3>Sensors won't connect</h3><div class="k">We start with brands that offer an open connection, and our own kit works with any garden.</div></div></div>
+   <div class="card feat" data-d="4"><div class="ico" style="background:rgba(245,196,81,.18)">💶</div><div><h3>People won't pay</h3><div class="k">Freemium: users see the litres and euros they save before they upgrade. The pilot measures it.</div></div></div>
+   <div class="card feat" data-d="5"><div class="ico" style="background:rgba(56,189,248,.18)">🏢</div><div><h3>Big brands copy us</h3><div class="k">They only work with their own hardware; we work with all of them and move faster.</div></div></div>
+   <div class="card feat" data-d="6"><div class="ico" style="background:rgba(74,222,128,.18)">🔒</div><div><h3>Users' data</h3><div class="k">GDPR-compliant from day one: data stored in the EU, never sold.</div></div></div>
+  </div>
+ </section>
+
+ <!-- THE TEAM -->
+ <section class="slide" data-who="ALL" data-glow="350,250,-150,-200">
+  <div class="eyebrow" data-d="1">14 — The team</div>
+  <h1 data-d="2">Three founders, <span class="hl">every function</span> covered</h1>
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:20px;margin-top:34px">
+   <div class="card teamc" data-d="3"><div class="av" style="background:var(--blue)">M</div><h3>Matei</h3><div class="role" style="color:var(--blue)">CEO · CFO</div><div class="k">Strategy, budget and fundraising · tracks revenue, cash and LTV/CAC</div></div>
+   <div class="card teamc" data-d="4"><div class="av" style="background:var(--yellow)">A</div><h3>Aryan</h3><div class="role" style="color:var(--yellow)">COO · CMO</div><div class="k">Operations, pilot and partners · marketing, launch and user growth</div></div>
+   <div class="card teamc" data-d="5"><div class="av" style="background:var(--green)">I</div><h3>Ilian</h3><div class="role" style="color:var(--green)">CTO · Product</div><div class="k">The app and the AI · sensor integration, Wi-Fi kit and roadmap</div></div>
+  </div>
+ </section>
+ <!-- 15 CLOSING -->
+ <section class="slide photo" data-who="MATEI" data-glow="250,-150,150,250" data-nohdr="1">
+  <div class="photo-bg" style="background-image:url(balcony.jpg);background-position:center"></div><div class="shade" style="background:radial-gradient(ellipse at center,rgba(6,14,10,.78) 0%,rgba(6,14,10,.93) 70%)"></div><div class="pcredit">Photo: Tangopaso (public domain), via Wikimedia Commons</div>
+  <div class="close">
+   <img src="logo.png" alt="" data-d="1">
+   <div class="brand" data-d="2">gr<i>AI</i>n</div>
+   <h1 data-d="3">Water smarter. Grow better.</h1>
+   <div class="q" data-d="5">Thank you · Questions?</div>
+  </div>
+ </section>
+
+ <!-- APPENDIX -->
+ <section class="slide" data-glow="300,-200,-100,250" data-nohdr="1"><div class="close"><div class="brand" data-d="1" style="font-size:80px">Appendix</div><div class="k" data-d="2" style="font-size:20px;margin-top:14px">Backup slides for Q&A: How it works · Porter's Five Forces · SWOT · Business Model Canvas</div></div></section>
+ <section class="slide apx" data-nohdr="1"><img src="appendix/a1.jpg" alt="Appendix A1 How it works"></section>
+ <section class="slide apx" data-nohdr="1"><img src="appendix/a6.jpg" alt="Appendix A6 Five Forces"></section>
+ <section class="slide apx" data-nohdr="1"><img src="appendix/a7.jpg" alt="Appendix A7 SWOT"></section>
+ <section class="slide apx" data-nohdr="1"><img src="appendix/a8.jpg" alt="Appendix A8 Business Model Canvas"></section>
+ <div class="num" id="num"></div><div class="bar" id="bar"></div>
+</div>
+<div class="notes" id="notes"></div>
+<div class="help" id="help">→ next · ← back · F full screen · N notes</div>
+<script>
+const NOTES={"1": "ALL · Title (~30 s)\nARYAN: Good morning everyone. We are grAIn, and before we start, let us tell you who does what.\nMATEI: I'm Matei, CEO and CFO. I set the strategy and manage the money, so I'll take you through our strategy, our market and our numbers.\nARYAN: I'm Aryan, COO and CMO. I run operations and marketing, so I'll talk about our customers, how we make money and how we reach them.\nILIAN: And I'm Ilian, CTO and head of product. I build the app and the AI, so I'll show you the product and how it works.", "2": "ARYAN · Hook (~20 s)\nPicture this. It's August in Madrid, 38 degrees, and you're away for the weekend. Your garden is slowly dying. Or the opposite: it rained all night, and your sprinklers still turn on at 7 a.m. Hundreds of litres, wasted.", "3": "ARYAN · Problem (~35 s)\nSo what's the problem? It's double. First, gardeners water by habit, not by data: timers run on a fixed schedule, rain or heatwave, while in past droughts Catalonia limited garden watering to two days a week. Second, people don't know how to care for their plants: why are the leaves yellow, which fertiliser? They just guess.", "4": "ARYAN · Validation (~35 s)\nIs this a real problem? Studies say yes. In a UK survey by Harveys, more than half of plant owners forget to water their plants, and 42 percent don't know how to look after them. And it costs money: the US Environmental Protection Agency estimates that up to half of irrigation water is wasted by overwatering. Next, we run our own survey in Spain, and the pilot tests if people will pay.\nHAND-OFF: So what did we build? Ilian.", "5": "ILIAN · Solution (~30 s)\nThat's why we created grAIn: an AI garden assistant that waters your plants exactly when they need it, and tells you how to take care of them. It does two things in one app. Smart watering: the AI reads the forecast and the soil, and decides when to water. And a plant doctor: take a photo, and grAIn tells you what's wrong.", "6": "ILIAN · Live demo (~30 s)\nLet me show you. Today grAIn skipped watering, because rain is coming tomorrow: 120 litres saved. Here is the plan for the week: no water on rainy days, more before the heatwave. The plant doctor checks the tomatoes. And here, what you save every month.", "7": "ILIAN · Plant scan (~20 s)\nNow the plant doctor, with a real photo. I open the camera, frame the leaf with the brown spot… the AI analyses it: early blight, a fungus. And it gives a plan: remove the spotted leaves today, spray copper fungicide once every 7 days for 3 weeks, and grAIn waters at the base every morning.\nHAND-OFF: Why now? Matei.", "8": "MATEI · Why now · PESTEL (~30 s)\nWhy now? We used the PESTEL framework. Drought plans limit watering, every litre saved is money saved, people care more about sustainability, AI and sensors are now cheap, Spain is one of the countries most hit by drought, and we respect GDPR. Everything in the environment pushes for a product like grAIn.", "9": "MATEI · Market size (~35 s)\nHow big is the opportunity? Smart irrigation is a 1.6 billion dollar market, growing about 11 percent a year. Our serviceable market is Spain: 5.9 million homes with a garden. Our goal is 60,000 users in three years, about 1 percent. We start in Spain on purpose: it's hit by drought, it's where we live, and it's a perfect test market before Europe.", "10": "MATEI · Competition (~25 s)\nOur competitors: Gardena, B-hyve and Rain Bird control water, but only with their own hardware. Planta and Greg give advice, but can't water. Nobody does both. So in Porter's terms, our generic strategy is differentiation focus.\nHAND-OFF: So how do we win? Aryan.", "11": "ARYAN · Blue Ocean (~35 s)\nHow do we win? With a Blue Ocean strategy. With the ERRC grid, we eliminate hardware lock-in and complicated setup, and we reduce the price: 2.99 euros a month instead of a 90 to 260 euro controller. We raise water savings and personalised advice, and we create something new: AI watering and a plant doctor in one app, that works with any sensor you already own.\nHAND-OFF: Now the product. Ilian.", "12": "ILIAN · Product & roadmap (~30 s)\nThe product. Version 1 is the app, connected by Bluetooth to existing sensors. Bluetooth only works about 10 metres from your phone, so we offer an optional Wi-Fi kit that keeps watering even when you're on holiday. To grow, we use the Ansoff matrix: first market penetration with home gardens in Spain, then farms, then Portugal, Italy and France.\nHAND-OFF: How do we make money? Aryan.", "13": "ARYAN · Business model (~30 s)\nHow do we make money? Freemium. Free: the basic assistant and one zone. Premium: 2.99 euros a month, with AI watering, several zones and the photo diagnosis. Less than a coffee a month. Plus the Wi-Fi kit at 59 euros. It's recurring revenue: a Premium user pays about 25 euros a year and stays over two years, so each one is worth about 60 euros.", "14": "ARYAN · Go-to-market (~35 s)\nHow do we get users? With Lean Startup: build, measure, learn. Spring 2027, an MVP pilot with 200 gardens in Madrid, which I run with garden centres. Summer 2027, the launch with gardening creators on TikTok and Instagram. 2028, all of Spain. During the pilot, the app measures litres saved, weekly users and Premium sign-ups, so we check product-market fit before spending on marketing.\nHAND-OFF: Now the numbers. Matei.", "15": "MATEI · Financials (~35 s)\nNow the numbers. Year one: 60,000 euros of revenue for 150,000 of costs. Year two: almost break-even. Year three: 461,000 euros and a profit of about 130,000. To get there, we are raising 150,000 euros: half for the product, 30 percent for marketing, 20 percent for kit stock, and our cash never drops below about 48,000 euros.", "16": "MATEI · Costs & unit economics (~35 s)\nWhere does the money go? In year one: 80,000 euros for the team and development, 10,000 for cloud and AI, 45,000 for marketing and 15,000 for the kits. The cost to get one Premium customer is about 45 euros in year one, dropping to about 18 by year three as word of mouth grows. Each customer is worth about 60 euros, so our LTV to CAC ratio goes from 1.3 to 3.4, above 3, which is healthy. Our exit: an acquisition by a big garden group like Husqvarna, the owner of Gardena.", "17": "ALL · Key risks (~30 s)\nILIAN: Of course there are risks. On the tech side: some sensors may not connect, so we start with open brands and our own kit works everywhere. And users' data: we're GDPR-compliant from day one, with data stored in the EU and never sold.\nARYAN: On the market side: people may not want to pay. That's why we use freemium, and the pilot measures it before we spend on marketing.\nMATEI: And big brands could copy us, but they only work with their own hardware, and we move faster.", "18": "ALL · The team (~30 s)\nILIAN: So that's our team: three founders, each owning one part of the company.\nMATEI: Day to day, I decide our strategy, manage the budget and the fundraising, and every month I track revenue, cash and our LTV to CAC.\nARYAN: I run the pilot and the partnerships with garden centres and sensor brands, organise the kit supply, and lead the marketing, so I'm responsible for getting users at a low cost.\nILIAN: I build the app and the AI, make it work with every sensor, design the Wi-Fi kit, and decide the roadmap from what users tell us in the pilot.", "19": "ALL · Closing (~15 s)\nARYAN: To sum up: water is becoming scarce, gardeners need help, and nobody combines smart watering and plant care in one app.\nMATEI: grAIn waters smarter...\nILIAN: ...so you can grow better. Thank you, and we're happy to answer your questions."};
+const S=[...document.querySelectorAll('.slide')],stage=document.getElementById('stage');
+let cur=-1;
+function fit(){const k=Math.min(innerWidth/1280,innerHeight/720);stage.style.transform=`translate(-50%,-50%) scale(${k})`}
+addEventListener('resize',fit);fit();
+// staggered entrance: data-d step → delay
+S.forEach(s=>s.querySelectorAll('[data-d]').forEach(e=>e.style.transitionDelay=(+e.dataset.d*0.18)+'s'));
+function countUp(el){const to=+el.dataset.count,dec=+(el.dataset.dec||0),suf=el.dataset.suffix||'',sep=el.dataset.sep;const t0=performance.now(),dur=1300;
+  (function f(){const k=Math.min(1,(performance.now()-t0)/dur),v=to*(1-Math.pow(1-k,3));let s=v.toFixed(dec);if(sep)s=Math.round(v).toLocaleString('en-US');el.textContent=s+suf;if(k<1)requestAnimationFrame(f)})();}
+function post(id,msg){const f=document.getElementById(id);try{f&&f.contentWindow&&f.contentWindow.postMessage(msg,'*')}catch(e){}}
+function go(i){if(i<0||i>=S.length||i===cur)return;const prev=S[cur];
+  if(prev){prev.classList.remove('on');if(prev.dataset.play)post(prev.dataset.play==='app'?'appframe':'scanframe','reset');prev.querySelectorAll('.b').forEach(b=>b.style.height='0')}
+  cur=i;const s=S[i];s.classList.add('on');
+  const g=(s.dataset.glow||'300,-200,-100,250').split(',').map(Number);
+  document.getElementById('g1').style.transform=`translate(${g[0]}px,${g[1]}px)`;document.getElementById('g2').style.transform=`translate(${g[2]}px,${g[3]}px)`;
+  document.getElementById('hdr').style.opacity=s.dataset.nohdr?0:1;
+  document.getElementById('num').textContent=s.classList.contains('apx')?'':(i+1);
+  document.getElementById('bar').style.width=((i+1)/S.length*100)+'%';
+  s.querySelectorAll('[data-count]').forEach(e=>setTimeout(()=>countUp(e),(+(e.closest('[data-d]')?.dataset.d||0))*180+250));
+  setTimeout(()=>s.querySelectorAll('.b').forEach(b=>b.style.height=b.dataset.h+'%'),700);
+  if(s.dataset.play==='app')setTimeout(()=>post('appframe','play'),1400);
+  if(s.dataset.play==='scan')setTimeout(()=>post('scanframe','play'),300);
+  const n=NOTES[i+1];document.getElementById('notes').textContent=n?`Slide ${i+1} · ${n}`:'Appendix · backup for questions';
+  try{history.replaceState(null,'','#s'+(i+1))}catch(e){}}
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(S.length-1);
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen?.():document.documentElement.requestFullscreen?.().catch(()=>{})}
+  else if(e.key==='n'||e.key==='N')document.getElementById('notes').classList.toggle('on')});
+document.addEventListener('click',e=>{if(e.target.closest('iframe,.notes'))return;go(e.clientX>innerWidth*0.3?cur+1:cur-1)});
+let tx=null;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>40)go(dx<0?cur+1:cur-1);tx=null});
+setTimeout(()=>document.getElementById('help').style.opacity=0,6000);
+const start=/^#s(\d+)$/.exec(location.hash);go(start?Math.min(S.length,+start[1])-1:0);
+</script>
+</body></html>
