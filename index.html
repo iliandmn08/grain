@@ -35,6 +35,11 @@ h1{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.08;margin:
 .k{font-size:17px;color:var(--muted);line-height:1.5}
 .big{font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .foot{position:absolute;left:58px;right:58px;bottom:34px;font-size:13px;color:var(--muted)}
+.qrbox{display:flex;align-items:center;gap:16px;margin-top:22px;padding:12px 16px 12px 12px;background:#fff;border-radius:16px;width:max-content;opacity:0;transform:translateY(14px) scale(.96);transition:opacity .6s,transform .6s;pointer-events:none}
+.qrbox.on{opacity:1;transform:none}
+.qrbox img{width:150px;height:150px;display:block}
+.qrbox b{display:block;font-size:20px;color:#0b1a12;line-height:1.2}
+.qrbox span{display:block;font-size:13px;color:#4c5a51;margin-top:4px}
 .proto-tag{display:inline-block;font-size:12px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
 /* 1 title */
 .title-wrap{height:100%;display:flex;flex-direction:column;justify-content:center}
@@ -243,6 +248,7 @@ table.costs{width:100%;border-collapse:collapse;font-size:18px}.costs th{font-si
      <div data-d="6"><i>4</i>Shows what you save</div>
     </div>
     <div data-d="7" style="margin-top:26px"><span class="proto-tag">Clickable prototype · demo data</span></div>
+    <div class="qrbox" id="qrbox"><img src="qr-try.svg" alt="QR code to try the grAIn app on your phone"><div><b>Try it on your phone</b><span>Scan with your camera · prototype, demo data</span><span>iliandmn08.github.io/grain/try.html</span></div></div>
    </div>
    <div class="phonebox" data-d="2"><iframe id="appframe" src="app.html#embed" title="grAIn app prototype"></iframe></div>
   </div>
@@ -440,7 +446,7 @@ function countUp(el){const to=+el.dataset.count,dec=+(el.dataset.dec||0),suf=el.
   (function f(){const k=Math.min(1,(performance.now()-t0)/dur),v=to*(1-Math.pow(1-k,3));let s=v.toFixed(dec);if(sep)s=Math.round(v).toLocaleString('en-US');el.textContent=s+suf;if(k<1)requestAnimationFrame(f)})();}
 function post(id,msg){const f=document.getElementById(id);try{f&&f.contentWindow&&f.contentWindow.postMessage(msg,'*')}catch(e){}}
 function go(i){if(i<0||i>=S.length||i===cur)return;const prev=S[cur];
-  if(prev){prev.classList.remove('on');if(prev.dataset.play)post(prev.dataset.play==='app'?'appframe':'scanframe','reset');prev.querySelectorAll('.b').forEach(b=>b.style.height='0')}
+  if(prev){prev.classList.remove('on');document.getElementById('qrbox')?.classList.remove('on');if(prev.dataset.play)post(prev.dataset.play==='app'?'appframe':'scanframe','reset');prev.querySelectorAll('.b').forEach(b=>b.style.height='0')}
   cur=i;const s=S[i];s.classList.add('on');
   const g=(s.dataset.glow||'300,-200,-100,250').split(',').map(Number);
   document.getElementById('g1').style.transform=`translate(${g[0]}px,${g[1]}px)`;document.getElementById('g2').style.transform=`translate(${g[2]}px,${g[3]}px)`;
@@ -453,10 +459,12 @@ function go(i){if(i<0||i>=S.length||i===cur)return;const prev=S[cur];
   if(s.dataset.play==='scan')setTimeout(()=>post('scanframe','play'),300);
   const n=NOTES[i+1];document.getElementById('notes').textContent=n?`Slide ${i+1} · ${n}`:'Appendix · backup for questions';
   try{history.replaceState(null,'','#s'+(i+1))}catch(e){}}
+addEventListener('message',e=>{if(e.data==='appdone'&&S[cur]?.dataset.play==='app')document.getElementById('qrbox')?.classList.add('on')});
 addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
   else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1)}
   else if(e.key==='Home')go(0);else if(e.key==='End')go(S.length-1);
   else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen?.():document.documentElement.requestFullscreen?.().catch(()=>{})}
+  else if(e.key==='q'||e.key==='Q')document.getElementById('qrbox')?.classList.toggle('on');
   else if(e.key==='n'||e.key==='N')document.getElementById('notes').classList.toggle('on')});
 document.addEventListener('click',e=>{if(e.target.closest('iframe,.notes'))return;go(e.clientX>innerWidth*0.3?cur+1:cur-1)});
 let tx=null;addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>40)go(dx<0?cur+1:cur-1);tx=null});

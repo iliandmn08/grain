@@ -249,7 +249,7 @@ async function demo(){stop=false;reset();await wait(288);
   cap('4 · Plant doctor','A diagnosis in seconds','Early blight on the tomatoes, and exactly what to do.');await scrollTo('#p-doctor',330);await wait(1728);await scrollTo('#p-doctor',520);await wait(576);
   await tap('#apply');cap('5 · One app','Care advice changes the watering','Diagnosis and irrigation talk to each other: that is grAIn.');await wait(1872);
   cap('6 · Savings','You see what you save','1,240 L this month, 38% less than a fixed timer.');await tap('.tab[data-p=stats]');await wait(3024);
-  F.classList.remove('on');$('#end').classList.add('on');cap('grAIn','Water smarter. Grow better.','€2.99/month · works with the sensors you already own.');
+  F.classList.remove('on');$('#end').classList.add('on');cap('grAIn','Water smarter. Grow better.','€2.99/month · works with the sensors you already own.');try{if(parent!==window)parent.postMessage('appdone','*')}catch(e){}
   }catch(e){}}
 $('#play').addEventListener('click',demo);
 if(location.hash==='#autoplay')setTimeout(demo,600);
